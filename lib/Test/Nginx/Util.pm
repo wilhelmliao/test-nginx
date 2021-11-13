@@ -69,7 +69,7 @@ our $PostponeOutput = $ENV{TEST_NGINX_POSTPONE_OUTPUT};
 
 our $Timeout = $ENV{TEST_NGINX_TIMEOUT} || 3;
 
-our $QuicIdleTimeout = $ENV{TEST_NGINX_QUIC_IDLE_TIMEOUT} || "600ms";
+our $QuicIdleTimeout = $ENV{TEST_NGINX_QUIC_IDLE_TIMEOUT} || 0.6;
 
 our $CheckLeak = $ENV{TEST_NGINX_CHECK_LEAK} || 0;
 
@@ -1061,6 +1061,9 @@ _EOC_
         if ($block->quic_max_idle_timeout) {
             $quic_max_idle_timeout = $block->quic_max_idle_timeout;
         }
+
+        $quic_max_idle_timeout = int($quic_max_idle_timeout * 1000);
+
         my $h3_listen_opts = $listen_opts;
         if ($h3_listen_opts !~ /\breuseport\b/) {
             $h3_listen_opts .= " reuseport";
@@ -1068,7 +1071,7 @@ _EOC_
 
         print $out <<_EOC_;
         listen          $ServerPort$h3_listen_opts http3;
-        quic_max_idle_timeout ${quic_max_idle_timeout};
+        quic_max_idle_timeout ${quic_max_idle_timeout}ms;
 _EOC_
     }
 
@@ -1769,7 +1772,12 @@ sub run_test ($) {
                             # wait for http3 connections to timeout
                             # so older nginx can exit
                             if (use_http3($block)) {
-                                sleep (0.1 + $QuicIdleTimeout / 1000.0);
+                                my $idle_time = $QuicIdleTimeout;
+                                if ($block->quic_max_idle_timeout) {
+                                    $idle_time = $block->quic_max_idle_timeout;
+                                }
+
+                                sleep (0.1 + $idle_time);
                             }
 
                             if ($Verbose) {

@@ -4343,9 +4343,9 @@ the older nginx will not exit unitl the older connections idle timeout reach.
 The default idle timeout is 60 seconds which is too long for the test scaffold.
 
 Change the idle timeout value by environment var TEST_NGINX_QUIC_IDLE_TIMEOUT.
-Default idle timeout value is 600ms if not set. Only digit numbers are allowed.
+Default idle timeout value is 0.6s if not set.
 
-    export TEST_NGINX_QUIC_IDLE_TIMEOUT=100ms
+    export TEST_NGINX_QUIC_IDLE_TIMEOUT=0.1
 
 =head2 TEST_NGINX_VERBOSE
 
